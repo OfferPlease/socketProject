@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+
+#vscode settings
+.vscode
+
+
+#target executables
+client
+serverM
+serverS
+serverL
+serverH
