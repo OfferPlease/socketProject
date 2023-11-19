@@ -19,8 +19,11 @@ OBJL = serverL.o utils.o
 TARGETH = serverH
 OBJH = serverH.o utils.o
 
+TARGETC = client
+OBJC = client.o utils.o
+
 # The first rule is the one executed when no parameters are fed into the makefile
-all: $(TARGETS) $(TARGETM) $(TARGETL) $(TARGETH)
+all: $(TARGETS) $(TARGETM) $(TARGETL) $(TARGETH) $(TARGETC)
 
 # Rule for creating the executable
 $(TARGETS): $(OBJS)
@@ -34,6 +37,9 @@ $(TARGETL): $(OBJL)
 
 $(TARGETH): $(OBJH)
 	$(CXX) $(CXXFLAGS) -o $(TARGETH) $(OBJH)
+
+$(TARGETC): $(OBJC)
+	$(CXX) $(CXXFLAGS) -o $(TARGETC) $(OBJC)
 
 # Rule for creating object file test1.o
 serverS.o: serverS.cpp utils.h
@@ -53,6 +59,8 @@ serverL.o: serverL.cpp utils.h
 serverH.o: serverH.cpp utils.h
 	$(CXX) $(CXXFLAGS) -c serverH.cpp
 
+client.o: client.cpp utils.h
+	$(CXX) $(CXXFLAGS) -c client.cpp
 # Rule for cleaning up
 clean:
-	rm -f $(TARGETS) $(OBJS) $(TARGETM) $(OBJM) $(TARGETH) $(OBJH) $(TARGETL) $(OBJL)
+	rm -f $(TARGETS) $(OBJS) $(TARGETM) $(OBJM) $(TARGETH) $(OBJH) $(TARGETL) $(OBJL) $(TARGETLC) $(OBJC)
