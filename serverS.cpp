@@ -1,12 +1,10 @@
-#include <iostream>
 #include <cstring>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <string>
-#include <unordered_map>
 #include "utils.h"
+
 extern unsigned int buffer_size;
 int main()
 {
@@ -15,19 +13,13 @@ int main()
         std::cout << "Server S is up and running using UDP on port 41367\n";
         std::string filename = "./input_files/science.txt";
         std::unordered_map<std::string, int> books = read_in_books(filename);
+        printBooks(books);
 
         // Create UDP socket
         // phrase2, work as a UDP server to receive requests sent by Mserver
-        int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sockfd < 0)
-        {
-                std::cerr << "Error creating socket!" << std::endl;
-                return 1;
-        }
-
         // Define server address
         int sockfd;
-        char buffer[1024];
+        char buffer[buffer_size];
         char *message = "Hello from UDP server";
         struct sockaddr_in servaddr, cliaddr;
 

@@ -73,11 +73,11 @@ void buffer_to_status(char *buffer, int size, std::unordered_map<std::string, in
 	}
 }
 
-void printbooks(std::unordered_map<std::string, int> &books)
+void printBooks(std::unordered_map<std::string, int> &books)
 {
 	for (auto &p : books)
 	{
-		std::cout << p.first << " :  " << p.second << std::endl;
+		std::cout << p.first << ":" << p.second << std::endl;
 	}
 }
 
@@ -106,7 +106,7 @@ std::unordered_map<std::string, std::string> read_in_members(std::string filenam
 				res.push_back(word);
 			}
 			std::string member_name = res[0].substr(0, res[0].size() - 1); // ignore the ending ','
-			members[member_name] = res[1].substr(0, res[1].size() - 1);    // mysterious unseen character at the end....????
+			members[member_name] = res[1].substr(0, res[1].size() - 1);	   // mysterious unseen character at the end....????
 		}
 		file.close();
 	}

@@ -18,13 +18,6 @@ int main()
 
         // Create UDP socket
         // phrase2, work as a UDP server to receive requests sent by Mserver
-        int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sockfd < 0)
-        {
-                std::cerr << "Error creating socket!" << std::endl;
-                return 1;
-        }
-
         // Define server address
         int sockfd;
         char buffer[buffer_size];
