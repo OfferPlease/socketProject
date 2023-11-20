@@ -12,6 +12,7 @@ static unsigned int buffer_size = 1024;
 static std::string message_not_registered = "-1";
 static std::string message_password_match = "0";
 static std::string message_password_mismatch = "-2";
+static std::string message_book_not_exit = "-3";
 
 std::unordered_map<std::string, int> read_in_books(std::string filename);
 void status_to_buffer(char *buffer, int size, std::unordered_map<std::string, int> &books);

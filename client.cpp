@@ -10,10 +10,11 @@ int main()
 {
         std::cout << "Client is up and running" << std::endl;
         // phrase 2 login
+        std::string username;
+        std::string password;
         while (1)
         {
-                std::string username;
-                std::string password;
+
                 std::cout << "Please enter the username: ";
                 getline(std::cin, username);
                 std::cout << "Please enter the password: ";
@@ -76,6 +77,45 @@ int main()
         }
 
         // phrase 3
+        // start a new TCP connection after logged in
+        int sock = 0, valread;
+        struct sockaddr_in serv_addr;
+        const char *message = "Hello from client";
+        char buffer[buffer_size] = {0};
 
-                return 0;
+        if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+                std::cout << "\n Socket creation error \n";
+                return -1;
+        }
+
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(45367);
+
+        // Convert IPv4 and IPv6 addresses from text to binary form
+        if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0)
+        {
+                std::cout << "\nInvalid address/ Address not supported \n";
+                return -1;
+        }
+
+        if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        {
+                std::cout << "\nConnection Failed \n";
+                return -1;
+        }
+
+        while (1)
+        {
+                std::cout << "Please enter book code to query:\n";
+                std::string query;
+                std::cin >> query;
+                std::cout << username << " sent the request to Main Server.\n";
+                send(sock, query.c_str(), strlen(message), 0);
+                std::cout << "Message sent\n";
+                valread = read(sock, buffer, 1024);
+                std::cout << buffer << std::endl;
+        }
+
+        return 0;
 }

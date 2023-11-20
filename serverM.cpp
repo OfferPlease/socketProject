@@ -9,68 +9,10 @@
 // extern unsigned int buffer_size;
 int main()
 {
-        // int udpfd;
         char buffer[buffer_size];
-        // char *message = "Hello from UDP server";
-        // struct sockaddr_in servaddr, cliaddr;
-        // std::unordered_map<std::string, int> books;
-        // // phrase 1
-        // // Creating socket file descriptor
-        // std::cout << "Main Server is up and running" << std::endl;
-        // if ((udpfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-        // {
-        //         perror("socket creation failed");
-        //         exit(EXIT_FAILURE);
-        // }
-
-        // memset(&servaddr, 0, sizeof(servaddr));
-        // memset(&cliaddr, 0, sizeof(cliaddr));
-
-        // // Filling server information
-        // servaddr.sin_family = AF_INET; // IPv4
-        // servaddr.sin_addr.s_addr = INADDR_ANY;
-        // servaddr.sin_port = htons(44367);
-
-        // // Bind the socket with the server address
-        // if (bind(udpfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
-        // {
-        //         perror("bind failed");
-        //         exit(EXIT_FAILURE);
-        // }
-
-        // bool S_flag = false, H_flag = false, L_flag = false;
-        // while (!S_flag || !H_flag || !L_flag)
-        // {
-        //         int len, n;
-        //         len = sizeof(cliaddr); // len is value/result
-
-        //         n = recvfrom(udpfd, (char *)buffer, buffer_size, MSG_WAITALL, (struct sockaddr *)&cliaddr, (socklen_t *)&len);
-        //         buffer[n] = '\0';
-        //         std::cout << "Client : " << buffer << std::endl;
-        //         if (buffer[0] == 'S')
-        //         {
-        //                 S_flag = true;
-        //                 std::cout << "Main Server received the book code list from server S using UDP over port 44367" << std::endl;
-        //         }
-        //         if (buffer[0] == 'L')
-        //         {
-        //                 L_flag = true;
-        //                 std::cout << "Main Server received the book code list from server L using UDP over port 44367" << std::endl;
-        //         }
-        //         if (buffer[0] == 'H')
-        //         {
-        //                 H_flag = true;
-        //                 std::cout << "Main Server received the book code list from server H using UDP over port 44367" << std::endl;
-        //         }
-        //         buffer_to_status(buffer, buffer_size, books);
-
-        //         sendto(udpfd, (const char *)message, strlen(message), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-        //         std::cout << "Hello message sent." << std::endl;
-        // }
-
-        // // printBooks(books);
-
-        // close(udpfd);
+        // phrase 1
+        // Creating socket file descriptor
+        std::cout << "Main Server is up and running" << std::endl;
 
         // phrase 2
         // read in encrypted member information
@@ -157,5 +99,71 @@ int main()
                 }
         }
 
+        // phrase 3
+        // reuse buffer
+        memset(buffer, 0, buffer_size);
+        // prepare a UDP client
+        int sock_udp;
+        struct sockaddr_in serverS_addr;
+        struct sockaddr_in serverH_addr;
+        struct sockaddr_in serverL_addr;
+        int server_len = sizeof(serverS_addr);
+        int bytes_received;
+        // Creating socket file descriptor
+        if ((sock_udp = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+        {
+                perror("socket creation failed");
+                exit(EXIT_FAILURE);
+        }
+
+        memset(&serverS_addr, 0, sizeof(serverS_addr));
+        memset(&serverH_addr, 0, sizeof(serverH_addr));
+        memset(&serverL_addr, 0, sizeof(serverL_addr));
+
+        // Filling server information
+        serverS_addr.sin_family = AF_INET;
+        serverS_addr.sin_port = htons(41367);
+        serverS_addr.sin_addr.s_addr = INADDR_ANY;
+
+        serverL_addr.sin_family = AF_INET;
+        serverL_addr.sin_port = htons(42367);
+        serverL_addr.sin_addr.s_addr = INADDR_ANY;
+
+        serverH_addr.sin_family = AF_INET;
+        serverH_addr.sin_port = htons(43367);
+        serverH_addr.sin_addr.s_addr = INADDR_ANY;
+
+        while (1)
+        {
+                if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+                {
+                        perror("accept");
+                        exit(EXIT_FAILURE);
+                }
+                read(new_socket, buffer, buffer_size);
+                std::cout << buffer << std::endl;
+                std::cout << "Main Server received the book request from client using TCP over port 45367\n";
+                // check the received message to see if  it is received
+
+                if (buffer[0] == 'S')
+                {
+                        // forward the massage to serverS
+                        sendto(sock_udp, (const char *)buffer, strlen(buffer), MSG_CONFIRM, (const struct sockaddr *)&serverS_addr, sizeof(serverS_addr));
+                }
+                else if (buffer[0] == 'L')
+                {
+                        // forward the massage to serverL
+                        sendto(sock_udp, (const char *)buffer, strlen(buffer), MSG_CONFIRM, (const struct sockaddr *)&serverL_addr, sizeof(serverL_addr));
+                }
+                else if (buffer[0] == 'H')
+                {
+                        // forward the massage to serverH
+                        sendto(sock_udp, (const char *)buffer, strlen(buffer), MSG_CONFIRM, (const struct sockaddr *)&serverL_addr, sizeof(serverL_addr));
+                }
+                else
+                { // not a valid code, send to client
+                        send(new_socket, message_book_not_exit.c_str(), strlen(message_book_not_exit.c_str()), 0);
+                }
+        }
         return 0;
 }
