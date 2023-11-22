@@ -13,7 +13,7 @@ int main()
         // phrase1, just read in book status
         // read in status from txt file
         std::cout << "Server L is up and running using UDP on port 42367\n";
-        std::string filename = "./input_files/literature.txt";
+        std::string filename = "./literature.txt";
         std::unordered_map<std::string, int> books = read_in_books(filename);
 
         // Create UDP socket
@@ -21,7 +21,6 @@ int main()
         // Define server address
         int sockfd;
         char buffer[buffer_size];
-        char *message = "Hello from UDP server";
         struct sockaddr_in servaddr, cliaddr;
 
         // Creating socket file descriptor
@@ -50,13 +49,28 @@ int main()
         {
                 int len, n;
                 len = sizeof(cliaddr); // len is value/result
-
-                n = recvfrom(sockfd, (char *)buffer, buffer_size, MSG_WAITALL, (struct sockaddr *)&cliaddr, (socklen_t *)&len);
+                memset(buffer, 0, buffer_size);
+                n = recvfrom(sockfd, (char *)buffer, 1024, MSG_WAITALL, (struct sockaddr *)&cliaddr, (socklen_t *)&len);
                 buffer[n] = '\0';
-                std::cout << "Client : " << buffer << std::endl;
-
-                sendto(sockfd, (const char *)message, strlen(message), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-                std::cout << "Hello message sent." << std::endl;
+                std::cout << "ServerL received " << buffer << " code from the Main Server\n";
+                // check if the book code exits
+                std::string code_str(buffer);
+                const char *message;
+                if (!books.count(code_str))
+                {
+                        message = message_book_not_exit.c_str();
+                }
+                else if (books[code_str] == 0)
+                {
+                        message = message_book_not_available.c_str();
+                }
+                else
+                { // books[code_str] > 0
+                        message = message_book_available.c_str();
+                        books[code_str]--;
+                }
+                sendto(sockfd, message, strlen(message), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
+                std::cout << "ServerL finished sending the availability status of code " << code_str << " using UDP on port 42367.\n";
         }
         return 0;
 }

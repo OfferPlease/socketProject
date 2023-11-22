@@ -34,6 +34,7 @@ void status_to_buffer(char *buffer, int size, std::unordered_map<std::string, in
 {
 	// build the send buffer
 	int curIndex = 0;
+	size = buffer_size;
 	// seprate each entry with ',', seperate book id and quantity with ':'
 	for (auto &p : books)
 	{
@@ -63,7 +64,7 @@ void buffer_to_status(char *buffer, int size, std::unordered_map<std::string, in
 	// set the books into the map
 	while (getline(ss, abook, ','))
 	{
-		int pos = abook.find(':');
+		const long unsigned int pos = abook.find(':');
 		if (pos == std::string::npos)
 		{
 			std::cout << "incorrect message from UDP datagram!" << std::endl;
@@ -106,7 +107,11 @@ std::unordered_map<std::string, std::string> read_in_members(std::string filenam
 				res.push_back(word);
 			}
 			std::string member_name = res[0].substr(0, res[0].size() - 1); // ignore the ending ','
-			members[member_name] = res[1].substr(0, res[1].size() - 1);	   // mysterious unseen character at the end....????
+			// mysterious unseen character at the end....????
+			// sometimes end with \r but sometimes not
+			if (res[1][res[1].size() - 1] == '\r')
+				res[1] = res[1].substr(0, res[1].size() - 1);
+			members[member_name] = res[1];
 		}
 		file.close();
 	}
@@ -118,7 +123,7 @@ std::unordered_map<std::string, std::string> read_in_members(std::string filenam
 	return members;
 }
 
-std::string encryptedStr(std::string &str)
+std::string encryptedStr(std::string str)
 {
 	std::string encrypted = str;
 	for (char &c : encrypted)
