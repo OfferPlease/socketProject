@@ -12,7 +12,7 @@ int main()
         // phrase 2 login
         std::string username;
         std::string password;
-
+        bool isAdmin = false;
         while (1)
         {
                 std::cout << "Please enter the username: ";
@@ -66,7 +66,7 @@ int main()
                 strcpy(send_buffer + encrypted_username.size() + 1, encrypted_password.c_str());
                 send_buffer[encrypted_username.size() + encrypted_password.size() + 1] = '\0';
                 send(sock, send_buffer, strlen(send_buffer), 0);
-                std::cout << encrypted_username << " send an authentication request to the Main Server\n";
+                std::cout << username << " send an authentication request to the Main Server\n";
                 valread = read(sock, recv_buffer, buffer_size);
                 recv_buffer[valread] = '\0';
 
@@ -85,6 +85,8 @@ int main()
                 close(sock);
         }
 
+        if (username == "Admin")
+                isAdmin = true;
         // phrase 3
         // start a new TCP connection after logged in
         int sock = 0, valread;
@@ -131,21 +133,34 @@ int main()
                 std::string query;
                 std::cin >> query;
                 send(sock, query.c_str(), strlen(message), 0);
-                std::cout << username << " sent the request to Main Server.\n";
+                if (isAdmin)
+                        std::cout << "Request sent to the Main Server with Admin rights.\n";
+                else
+                        std::cout << username << " sent the request to Main Server.\n";
                 valread = read(sock, buffer, 1024);
                 buffer[valread] = '\0';
                 std::cout << "Response received from the Main Server on TCP port: " << port_number << std::endl;
-                if (strcmp(buffer, message_book_available.c_str()) == 0)
+
+                if (!isAdmin)
                 {
-                        std::cout << "The requested book is available in the library.\n";
+                        if (strcmp(buffer, message_book_available.c_str()) == 0)
+                                std::cout << "The requested book is available in the library.\n";
+                        if (strcmp(buffer, message_book_not_available.c_str()) == 0)
+                                std::cout << "The requested book is not available in the library.\n";
+                        if (strcmp(buffer, message_book_not_exit.c_str()) == 0)
+                                std::cout << "Not able to find the book int the system.\n";
                 }
-                if (strcmp(buffer, message_book_not_available.c_str()) == 0)
+                else // if it is Admin user
                 {
-                        std::cout << "The requested book is not available in the library.\n";
-                }
-                if (strcmp(buffer, message_book_not_exit.c_str()) == 0)
-                {
-                        std::cout << "Not able to find the book int the system.\n";
+                        std::string recv_str(buffer);
+                        if (recv_str.find(message_book_not_exit) != std::string::npos)
+                                std::cout << "Not able to find the book\n";
+                        else
+                        {
+                                unsigned long int pos = recv_str.find(":");
+                                std::cout << "Admin mode, book exists. received message:" << recv_str << std::endl;
+                                std::cout << "Total number of book " << query << " available = " << recv_str.substr(pos + 1) << std::endl;
+                        }
                 }
         }
         close(sock);

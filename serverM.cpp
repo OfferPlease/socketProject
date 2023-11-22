@@ -28,6 +28,7 @@ int main()
         struct sockaddr_in address;
         int opt = 1;
         int addrlen = sizeof(address);
+        bool isAdmin = false;
 
         // Creating socket file descriptor
         if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -78,7 +79,9 @@ int main()
                 std::string username_entryped = recv_str.substr(0, pos);
                 std::string password_entryped = recv_str.substr(pos + 1);
                 std::cout << "Main server received the username amd password from the clientt using TCP over port 45367\n";
-
+                // check if it is the admin user
+                if (username_entryped == "Firns")
+                        isAdmin = true;
                 if (!members.count(username_entryped))
                 {
                         std::cout << username_entryped << "is not registed. Send a reply to the client\n";
@@ -156,13 +159,16 @@ int main()
                 // reuse buffer
                 memset(buffer, 0, buffer_size);
                 // read client query
-                read(new_socket, buffer, buffer_size);
+                int readval = read(new_socket, buffer, buffer_size);
+                buffer[readval] = '\0';
                 std::cout << buffer << std::endl;
                 std::cout << "Main Server received the book request from client using TCP over port 45367\n";
                 // check the received message to see if  it is received
                 char recv_buffer[buffer_size] = {0};
                 if (buffer[0] == 'S')
                 {
+                        if (isAdmin) // mark as admin info
+                                strcpy(buffer + strlen(buffer), "+Admin");
                         // forward the massage to serverS
                         std::cout << "Found " << buffer << " located at ServerS. Send to ServerS\n";
                         sendto(sock_udp, (const char *)buffer, strlen(buffer), MSG_CONFIRM, (const struct sockaddr *)&serverS_addr, sizeof(serverS_addr));
@@ -172,6 +178,8 @@ int main()
                 }
                 else if (buffer[0] == 'L')
                 {
+                        if (isAdmin) // mark as admin info
+                                strcpy(buffer + strlen(buffer), "+Admin");
                         // forward the massage to serverL
                         std::cout << "Found " << buffer << " located at ServerL. Send to ServerL\n";
                         sendto(sock_udp, (const char *)buffer, strlen(buffer), MSG_CONFIRM, (const struct sockaddr *)&serverL_addr, sizeof(serverL_addr));
@@ -181,6 +189,8 @@ int main()
                 }
                 else if (buffer[0] == 'H')
                 {
+                        if (isAdmin) // mark as admin info
+                                strcpy(buffer + strlen(buffer), "+Admin");
                         // forward the massage to serverH
                         std::cout << "Found " << buffer << " located at ServerH. Send to ServerH\n";
                         sendto(sock_udp, (const char *)buffer, strlen(buffer), MSG_CONFIRM, (const struct sockaddr *)&serverH_addr, sizeof(serverL_addr));
@@ -191,23 +201,33 @@ int main()
                 else
                 { // not a valid code, send to client
                         std::cout << "Did not find " << buffer << " in the book code list.\n";
-                        send(new_socket, message_book_not_available.c_str(), strlen(message_book_not_available.c_str()), 0);
+                        send(new_socket, message_book_not_exit.c_str(), strlen(message_book_not_exit.c_str()), 0);
                         continue;
                 }
                 // send the response message from serverS, H, L to the
                 std::cout << "Main Server reveived from server" << buffer[0] << " the book status result using UDP over port 44367\n";
-                if (strcmp(recv_buffer, message_book_available.c_str()) == 0)
+                if (!isAdmin)
                 {
-                        std::cout << "The requested book is available\n";
+                        if (strcmp(recv_buffer, message_book_available.c_str()) == 0)
+                                std::cout << "The requested book is available\n";
+                        if (strcmp(recv_buffer, message_book_not_available.c_str()) == 0)
+                                std::cout << "The requested book is not available\n";
+                        if (strcmp(recv_buffer, message_book_not_exit.c_str()) == 0)
+                                std::cout << "Not able to find the book\n";
                 }
-                if (strcmp(recv_buffer, message_book_not_available.c_str()) == 0)
-                {
-                        std::cout << "The requested book is not available\n";
+                else
+                { // Admin mode
+
+                        std::string recv_str(recv_buffer);
+                        if (recv_str.find(message_book_not_exit) != std::string::npos)
+                                std::cout << "Not able to find the book\n";
+                        else
+                        {
+                                unsigned long int pos = recv_str.find(":");
+                                std::cout << "Number of books " << buffer << " available is " << recv_str.substr(pos + 1) << std::endl;
+                        }
                 }
-                if (strcmp(recv_buffer, message_book_not_exit.c_str()) == 0)
-                {
-                        std::cout << "Not able to find the book\n";
-                }
+
                 send(new_socket, recv_buffer, strlen(recv_buffer), 0);
                 std::cout << "Main server sent the book status to the client\n";
         }

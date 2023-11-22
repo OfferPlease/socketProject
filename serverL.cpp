@@ -50,27 +50,52 @@ int main()
                 int len, n;
                 len = sizeof(cliaddr); // len is value/result
                 memset(buffer, 0, buffer_size);
-                n = recvfrom(sockfd, (char *)buffer, 1024, MSG_WAITALL, (struct sockaddr *)&cliaddr, (socklen_t *)&len);
+                n = recvfrom(sockfd, (char *)buffer, buffer_size, MSG_WAITALL, (struct sockaddr *)&cliaddr, (socklen_t *)&len);
                 buffer[n] = '\0';
-                std::cout << "ServerL received " << buffer << " code from the Main Server\n";
+
                 // check if the book code exits
                 std::string code_str(buffer);
-                const char *message;
+                char buffer_send[buffer_size] = {0};
+                bool isAdmin = false;
+                unsigned long int pos = code_str.find("+Admin");
+                if (pos != std::string::npos)
+                {
+                        isAdmin = true;
+                        code_str = code_str.substr(0, pos);
+                }
+                if (isAdmin)
+                        std::cout << "ServerS reveived an inventory status request for code " << code_str << ".\n";
+                else
+                        std::cout << "ServerS received " << code_str << " code from the Main Server\n";
                 if (!books.count(code_str))
                 {
-                        message = message_book_not_exit.c_str();
+                        strcpy(buffer_send, message_book_not_exit.c_str());
                 }
                 else if (books[code_str] == 0)
                 {
-                        message = message_book_not_available.c_str();
+                        strcpy(buffer_send, message_book_not_available.c_str());
+                        if (isAdmin)
+                                strcpy(buffer_send + message_book_not_available.size(), ":0");
                 }
                 else
                 { // books[code_str] > 0
-                        message = message_book_available.c_str();
-                        books[code_str]--;
+                        strcpy(buffer_send, message_book_available.c_str());
+                        // if it is admin mode, return book number instead of decrease number
+                        if (isAdmin)
+                        {
+                                strcpy(buffer_send + message_book_available.size(), ":");
+                                strcpy(buffer_send + message_book_available.size() + 1, std::to_string(books[code_str]).c_str());
+                        }
+                        else
+                        {
+                                books[code_str]--;
+                        }
                 }
-                sendto(sockfd, message, strlen(message), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-                std::cout << "ServerL finished sending the availability status of code " << code_str << " using UDP on port 42367.\n";
+                sendto(sockfd, buffer_send, strlen(buffer_send), MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
+
+                if (isAdmin)
+                        std::cout << "ServerS finished sending the inventory status to thee Main Server using UDP on port 42367.\n";
+                else
+                        std::cout << "ServerS finished sending the availability status of code " << code_str << " using UDP on port 42367.\n";
         }
-        return 0;
 }
